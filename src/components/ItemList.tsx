@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, ExternalLink } from 'lucide-react';
+import { Copy, Trash2, FileText, File, MoreVertical } from 'lucide-react';
 import { SharedItem, deleteItem, deleteAllItems, timeRemaining, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
 
@@ -112,13 +112,6 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
                   className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-lg shadow-lg z-10 py-1 animate-in fade-in slide-in-from-top-1 duration-150"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
-                    onClick={() => { onItemClick(item); setOpenMenuId(null); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                    Buka
-                  </button>
                   <button
                     onClick={() => copyLink(item.shortCode)}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
