@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle } from 'lucide-react';
+import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle, Search } from 'lucide-react';
 import { SharedItem, deleteItem, timeRemaining, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
@@ -25,6 +25,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 30000);
@@ -124,8 +125,34 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
         )}
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Cari item..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-9 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       <div className="space-y-2">
-        {items.map((item) => (
+        {items
+          .filter(item => {
+            if (!search.trim()) return true;
+            const q = search.toLowerCase();
+            return item.title.toLowerCase().includes(q) || item.shortCode.includes(q) || (item.fileName?.toLowerCase().includes(q));
+          })
+          .map((item) => (
           <div
             key={item.id}
             onClick={() => selectMode ? toggleSelect(item.id) : onItemClick(item)}
