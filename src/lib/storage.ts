@@ -7,7 +7,7 @@ export interface SharedItem {
   fileSize?: number;
   fileType?: string;
   createdAt: number;
-  expiresAt: number;
+  expiresAt: number; // 0 means no expiry
   shortCode: string;
 }
 
@@ -27,7 +27,7 @@ export function getItems(): SharedItem[] {
   if (!raw) return [];
   const items: SharedItem[] = JSON.parse(raw);
   const now = Date.now();
-  const valid = items.filter(i => i.expiresAt > now);
+  const valid = items.filter(i => i.expiresAt === 0 || i.expiresAt > now);
   if (valid.length !== items.length) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
   }
@@ -72,6 +72,7 @@ export const EXPIRY_OPTIONS = [
   { label: '6 Jam', value: 21600000 },
   { label: '24 Jam', value: 86400000 },
   { label: '7 Hari', value: 604800000 },
+  { label: 'Selamanya', value: 0 },
 ];
 
 export function formatFileSize(bytes: number): string {
@@ -81,6 +82,7 @@ export function formatFileSize(bytes: number): string {
 }
 
 export function timeRemaining(expiresAt: number): string {
+  if (expiresAt === 0) return 'Permanen';
   const diff = expiresAt - Date.now();
   if (diff <= 0) return 'Kedaluwarsa';
   const hours = Math.floor(diff / 3600000);

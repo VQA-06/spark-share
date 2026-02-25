@@ -51,7 +51,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
       fileName,
       fileSize,
       fileType,
-      expiresAt: Date.now() + expiry,
+      expiresAt: expiry === 0 ? 0 : Date.now() + expiry,
     });
 
     const link = `${window.location.origin}/s/${item.shortCode}`;

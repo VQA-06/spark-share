@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, Check } from 'lucide-react';
+import { Copy, Trash2, FileText, File, Check, MoreVertical, ExternalLink } from 'lucide-react';
 import { SharedItem, deleteItem, deleteAllItems, timeRemaining, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface ItemListProps {
   items: SharedItem[];
@@ -10,23 +11,32 @@ interface ItemListProps {
 
 const ItemList = ({ items, onUpdate }: ItemListProps) => {
   const [, setTick] = useState(0);
-  const [copiedId, setCopiedId] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 30000);
     return () => clearInterval(timer);
   }, []);
 
-  const copyLink = (code: string, id: string) => {
+  // Close menu on outside click
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handler = () => setOpenMenuId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openMenuId]);
+
+  const copyLink = (code: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/s/${code}`);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(''), 2000);
     toast.success('Link disalin!');
+    setOpenMenuId(null);
   };
 
   const handleDelete = (id: string) => {
     deleteItem(id);
     onUpdate();
+    setOpenMenuId(null);
     toast.success('Item dihapus');
   };
 
@@ -34,6 +44,11 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
     deleteAllItems();
     onUpdate();
     toast.success('Semua item dihapus');
+  };
+
+  const handleOpen = (code: string) => {
+    navigate(`/s/${code}`);
+    setOpenMenuId(null);
   };
 
   if (items.length === 0) {
@@ -86,19 +101,47 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
               </div>
             </div>
 
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Three-dot menu */}
+            <div className="relative">
               <button
-                onClick={() => copyLink(item.shortCode, item.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === item.id ? null : item.id);
+                }}
                 className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
               >
-                {copiedId === item.id ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+                <MoreVertical className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="p-2 rounded-md hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+
+              {openMenuId === item.id && (
+                <div
+                  className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-lg shadow-lg z-10 py-1 animate-in fade-in slide-in-from-top-1 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => handleOpen(item.shortCode)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                    Buka
+                  </button>
+                  <button
+                    onClick={() => copyLink(item.shortCode)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                    Salin link
+                  </button>
+                  <div className="h-px bg-border my-1" />
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Hapus
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
