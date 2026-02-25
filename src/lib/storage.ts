@@ -13,13 +13,13 @@ export interface SharedItem {
 
 const STORAGE_KEY = 'shared_items';
 
-function generateShortCode(): string {
-  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+function findNextAvailableSlot(items: SharedItem[]): string {
+  const usedSlots = new Set(items.map(i => i.shortCode));
+  let slot = 1;
+  while (usedSlots.has(String(slot))) {
+    slot++;
   }
-  return code;
+  return String(slot);
 }
 
 export function getItems(): SharedItem[] {
@@ -43,7 +43,7 @@ export function addItem(item: Omit<SharedItem, 'id' | 'shortCode' | 'createdAt'>
   const newItem: SharedItem = {
     ...item,
     id: crypto.randomUUID(),
-    shortCode: generateShortCode(),
+    shortCode: findNextAvailableSlot(items),
     createdAt: Date.now(),
   };
   items.push(newItem);
