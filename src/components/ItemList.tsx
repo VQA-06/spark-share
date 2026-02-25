@@ -1,25 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, Check, MoreVertical, ExternalLink } from 'lucide-react';
+import { Copy, Trash2, FileText, File, MoreVertical, ExternalLink } from 'lucide-react';
 import { SharedItem, deleteItem, deleteAllItems, timeRemaining, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface ItemListProps {
   items: SharedItem[];
   onUpdate: () => void;
+  onItemClick: (item: SharedItem) => void;
 }
 
-const ItemList = ({ items, onUpdate }: ItemListProps) => {
+const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [, setTick] = useState(0);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 30000);
     return () => clearInterval(timer);
   }, []);
 
-  // Close menu on outside click
   useEffect(() => {
     if (!openMenuId) return;
     const handler = () => setOpenMenuId(null);
@@ -28,7 +26,7 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
   }, [openMenuId]);
 
   const copyLink = (code: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/s/${code}`);
+    navigator.clipboard.writeText(`${window.location.origin}/${code}`);
     toast.success('Link disalin!');
     setOpenMenuId(null);
   };
@@ -44,11 +42,6 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
     deleteAllItems();
     onUpdate();
     toast.success('Semua item dihapus');
-  };
-
-  const handleOpen = (code: string) => {
-    navigate(`/s/${code}`);
-    setOpenMenuId(null);
   };
 
   if (items.length === 0) {
@@ -76,7 +69,8 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-sm transition-all group"
+            onClick={() => onItemClick(item)}
+            className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-sm transition-all cursor-pointer group"
           >
             <div className="p-2 bg-muted rounded-md">
               {item.type === 'text' ? (
@@ -89,7 +83,7 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-foreground truncate">{item.title}</p>
               <div className="flex items-center gap-2 mt-0.5">
-                <code className="text-xs text-primary font-mono">/s/{item.shortCode}</code>
+                <code className="text-xs text-primary font-mono">/{item.shortCode}</code>
                 <span className="text-xs text-muted-foreground">·</span>
                 <span className="text-xs text-muted-foreground">{timeRemaining(item.expiresAt)}</span>
                 {item.fileSize && (
@@ -119,7 +113,7 @@ const ItemList = ({ items, onUpdate }: ItemListProps) => {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
-                    onClick={() => handleOpen(item.shortCode)}
+                    onClick={() => { onItemClick(item); setOpenMenuId(null); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />

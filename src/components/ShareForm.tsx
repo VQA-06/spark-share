@@ -55,7 +55,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
       expiresAt: expiry === 0 ? 0 : Date.now() + expiry,
     });
 
-    const link = `${window.location.origin}/s/${item.shortCode}`;
+    const link = `${window.location.origin}/${item.shortCode}`;
     setLastLink(link);
     setText('');
     setTitle('');
