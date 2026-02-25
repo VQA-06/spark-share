@@ -75,7 +75,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
   return (
     <div className="space-y-6">
       {/* Mode Toggle */}
-      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit mx-auto">
         <button
           onClick={() => setMode('text')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
