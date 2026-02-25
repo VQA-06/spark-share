@@ -31,7 +31,7 @@ export function getItems(): SharedItem[] {
   if (valid.length !== items.length) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
   }
-  return valid;
+  return valid.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function getItemByCode(code: string): SharedItem | undefined {
