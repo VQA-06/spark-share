@@ -201,7 +201,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
                   Hapus semua
                 </button>
               </div>
-              <div className="space-y-1.5 max-h-48 overflow-auto">
+              <div className="space-y-1.5 max-h-48 overflow-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
                 {files.map((file, i) => (
                   <div
                     key={`${file.name}-${i}`}
