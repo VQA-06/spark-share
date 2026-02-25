@@ -1,5 +1,5 @@
 import { useState, useRef, DragEvent } from 'react';
-import { Upload, FileText, Clock, Check, Copy } from 'lucide-react';
+import { Upload, FileText, Clock, Check, Copy, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addItem, EXPIRY_OPTIONS, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
@@ -156,20 +156,17 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
       <div className="flex items-center gap-3">
         <Clock className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Hapus otomatis:</span>
-        <div className="flex gap-2">
-          {EXPIRY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setExpiry(opt.value)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                expiry === opt.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="relative">
+          <select
+            value={expiry}
+            onChange={(e) => setExpiry(Number(e.target.value))}
+            className="appearance-none pl-3 pr-8 py-1.5 bg-muted border border-border rounded-lg text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+          >
+            {EXPIRY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
 
