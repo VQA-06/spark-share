@@ -149,8 +149,10 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
         {items
           .filter(item => {
             if (!search.trim()) return true;
-            const q = search.toLowerCase();
-            return item.title.toLowerCase().includes(q) || item.shortCode.includes(q) || (item.fileName?.toLowerCase().includes(q));
+            // Extract words from search, splitting by spaces, dashes, dots, etc.
+            const words = search.toLowerCase().replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g, ' ').split(/\s+/).filter(Boolean);
+            const target = item.title.toLowerCase() + ' ' + (item.fileName?.toLowerCase() || '') + ' ' + item.shortCode;
+            return words.every(word => target.includes(word));
           })
           .map((item) => (
           <div
