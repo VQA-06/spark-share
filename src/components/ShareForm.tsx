@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, DragEvent } from 'react';
 import { Upload, FileText, Clock, Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addItem, EXPIRY_OPTIONS, formatFileSize } from '@/lib/storage';
@@ -16,6 +16,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [lastLink, setLastLink] = useState('');
   const [copied, setCopied] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async () => {
@@ -116,16 +117,31 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
       ) : (
         <div
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all"
+          onDragOver={(e: DragEvent) => { e.preventDefault(); setDragging(true); }}
+          onDragEnter={(e: DragEvent) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={(e: DragEvent) => { e.preventDefault(); setDragging(false); }}
+          onDrop={(e: DragEvent) => {
+            e.preventDefault();
+            setDragging(false);
+            const droppedFile = e.dataTransfer.files?.[0];
+            if (droppedFile) setFile(droppedFile);
+          }}
+          className={`w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+            dragging
+              ? 'border-primary bg-accent/50 scale-[1.01]'
+              : 'border-border hover:border-primary/50 hover:bg-accent/30'
+          }`}
         >
-          <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+          <Upload className={`w-8 h-8 mx-auto mb-3 transition-colors ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
           {file ? (
             <div>
               <p className="font-medium text-foreground">{file.name}</p>
               <p className="text-sm text-muted-foreground mt-1">{formatFileSize(file.size)}</p>
             </div>
           ) : (
-            <p className="text-muted-foreground">Klik untuk memilih file</p>
+            <div>
+              <p className="text-muted-foreground">{dragging ? 'Lepaskan file di sini' : 'Seret file ke sini atau klik untuk memilih'}</p>
+            </div>
           )}
           <input
             ref={fileRef}
