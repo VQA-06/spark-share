@@ -1,63 +1,104 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface SharedItem {
   id: string;
   type: 'text' | 'file';
   title: string;
-  content: string; // text content or base64 file data
+  content: string;
   fileName?: string;
   fileSize?: number;
   fileType?: string;
   createdAt: number;
-  expiresAt: number; // 0 means no expiry
+  expiresAt: number;
   shortCode: string;
 }
 
-const STORAGE_KEY = 'shared_items';
-
-function findNextAvailableSlot(items: SharedItem[]): string {
-  const usedSlots = new Set(items.map(i => i.shortCode));
-  let slot = 1;
-  while (usedSlots.has(String(slot))) {
-    slot++;
-  }
-  return String(slot);
+interface DbRow {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  file_name: string | null;
+  file_size: number | null;
+  file_type: string | null;
+  short_code: string;
+  created_at: string;
+  expires_at: string | null;
 }
 
-export function getItems(): SharedItem[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  const items: SharedItem[] = JSON.parse(raw);
-  const now = Date.now();
-  const valid = items.filter(i => i.expiresAt === 0 || i.expiresAt > now);
-  if (valid.length !== items.length) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
-  }
-  return valid.sort((a, b) => b.createdAt - a.createdAt);
-}
-
-export function getItemByCode(code: string): SharedItem | undefined {
-  return getItems().find(i => i.shortCode === code);
-}
-
-export function addItem(item: Omit<SharedItem, 'id' | 'shortCode' | 'createdAt'>): SharedItem {
-  const items = getItems();
-  const newItem: SharedItem = {
-    ...item,
-    id: crypto.randomUUID(),
-    shortCode: findNextAvailableSlot(items),
-    createdAt: Date.now(),
+function rowToItem(row: DbRow): SharedItem {
+  return {
+    id: row.id,
+    type: row.type as 'text' | 'file',
+    title: row.title,
+    content: row.content,
+    fileName: row.file_name ?? undefined,
+    fileSize: row.file_size ?? undefined,
+    fileType: row.file_type ?? undefined,
+    shortCode: row.short_code,
+    createdAt: new Date(row.created_at).getTime(),
+    expiresAt: row.expires_at ? new Date(row.expires_at).getTime() : 0,
   };
-  items.push(newItem);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  return newItem;
 }
 
-export function deleteItem(id: string): void {
-  const items = getItems().filter(i => i.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+export async function getItems(): Promise<SharedItem[]> {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('shared_items')
+    .select('*')
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching items:', error);
+    return [];
+  }
+  return (data as DbRow[]).map(rowToItem);
 }
 
-export function deleteAllItems(): void {
-  localStorage.removeItem(STORAGE_KEY);
+export async function getItemByCode(code: string): Promise<SharedItem | undefined> {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('shared_items')
+    .select('*')
+    .eq('short_code', code)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .maybeSingle();
+
+  if (error || !data) return undefined;
+  return rowToItem(data as DbRow);
+}
+
+export async function addItem(item: Omit<SharedItem, 'id' | 'shortCode' | 'createdAt'>): Promise<SharedItem> {
+  // Get next short code
+  const { data: codeData } = await supabase.rpc('next_short_code');
+  const shortCode = codeData || String(Date.now());
+
+  const { data, error } = await supabase
+    .from('shared_items')
+    .insert({
+      type: item.type,
+      title: item.title,
+      content: item.content,
+      file_name: item.fileName || null,
+      file_size: item.fileSize || null,
+      file_type: item.fileType || null,
+      short_code: shortCode,
+      expires_at: item.expiresAt === 0 ? null : new Date(item.expiresAt).toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return rowToItem(data as DbRow);
+}
+
+export async function deleteItem(id: string): Promise<void> {
+  await supabase.from('shared_items').delete().eq('id', id);
+}
+
+export async function deleteAllItems(): Promise<void> {
+  await supabase.from('shared_items').delete().neq('id', '');
 }
 
 export function getExpiryLabel(ms: number): string {

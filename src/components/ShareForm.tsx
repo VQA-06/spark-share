@@ -52,7 +52,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
 
     try {
       if (mode === 'text') {
-        const item = addItem({
+        const item = await addItem({
           type: 'text',
           title: title.trim() || 'Teks tanpa judul',
           content: text,
@@ -65,7 +65,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
         const links: string[] = [];
         for (const file of files) {
           const content = await readFileAsDataUrl(file);
-          const item = addItem({
+          const item = await addItem({
             type: 'file',
             title: files.length === 1 && title.trim() ? title.trim() : file.name,
             content,
