@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
-const TEXT_EXTENSIONS = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'css', 'js', 'ts', 'tsx', 'jsx', 'py', 'java', 'c', 'cpp', 'h', 'rb', 'go', 'rs', 'php', 'sh', 'bash', 'yml', 'yaml', 'toml', 'ini', 'cfg', 'conf', 'log', 'sql', 'env', 'gitignore', 'dockerfile', 'makefile', 'readme', 'license', 'svg'];
+const TEXT_EXTENSIONS = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'css', 'js', 'ts', 'tsx', 'jsx', 'py', 'java', 'c', 'cpp', 'h', 'rb', 'go', 'rs', 'php', 'sh', 'bash', 'bat', 'cmd', 'ps1', 'yml', 'yaml', 'toml', 'ini', 'cfg', 'conf', 'log', 'sql', 'env', 'gitignore', 'dockerfile', 'makefile', 'readme', 'license', 'svg', 'htaccess', 'properties', 'gradle', 'kt', 'swift', 'r', 'lua', 'pl', 'pm', 'tcl', 'asm', 'vbs', 'reg'];
 
 function isTextFile(fileName?: string, fileType?: string): boolean {
   if (fileType?.startsWith('text/')) return true;
@@ -12,6 +12,12 @@ function isTextFile(fileName?: string, fileType?: string): boolean {
   if (!fileName) return false;
   const ext = fileName.split('.').pop()?.toLowerCase() || '';
   return TEXT_EXTENSIONS.includes(ext);
+}
+
+function isPdfFile(fileName?: string, fileType?: string): boolean {
+  if (fileType === 'application/pdf') return true;
+  if (!fileName) return false;
+  return fileName.toLowerCase().endsWith('.pdf');
 }
 
 function decodeDataUrl(dataUrl: string): string {
@@ -104,6 +110,25 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
               {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
             </button>
           </div>
+          <Button onClick={handleDownload} variant="outline" className="w-full">
+            <Download className="w-4 h-4 mr-2" />
+            Download {item.fileName}
+          </Button>
+        </div>
+      ) : item.type === 'file' && isPdfFile(item.fileName, item.fileType) ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-t-lg">
+            <FileText className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">{item.fileName}</span>
+            {item.fileSize && (
+              <span className="text-xs text-muted-foreground ml-auto">{formatFileSize(item.fileSize)}</span>
+            )}
+          </div>
+          <iframe
+            src={item.content}
+            className="w-full h-[60vh] border border-border rounded-b-lg"
+            title={item.fileName || 'PDF Preview'}
+          />
           <Button onClick={handleDownload} variant="outline" className="w-full">
             <Download className="w-4 h-4 mr-2" />
             Download {item.fileName}
