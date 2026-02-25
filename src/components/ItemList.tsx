@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X } from 'lucide-react';
+import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle } from 'lucide-react';
 import { SharedItem, deleteItem, timeRemaining, formatFileSize } from '@/lib/storage';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ItemListProps {
   items: SharedItem[];
@@ -14,6 +24,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 30000);
@@ -33,11 +44,28 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
     setOpenMenuId(null);
   };
 
-  const handleDelete = (id: string) => {
-    deleteItem(id);
-    onUpdate();
+  const confirmDeleteSingle = (id: string) => {
     setOpenMenuId(null);
-    toast.success('Item dihapus');
+    setDeleteConfirm({ type: 'single', id });
+  };
+
+  const confirmDeleteMulti = () => {
+    setDeleteConfirm({ type: 'multi' });
+  };
+
+  const executeDelete = () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.type === 'single' && deleteConfirm.id) {
+      deleteItem(deleteConfirm.id);
+      toast.success('Item dihapus');
+    } else if (deleteConfirm.type === 'multi') {
+      selected.forEach(id => deleteItem(id));
+      toast.success(`${selected.size} item dihapus`);
+      setSelected(new Set());
+      setSelectMode(false);
+    }
+    setDeleteConfirm(null);
+    onUpdate();
   };
 
   const toggleSelect = (id: string) => {
@@ -47,14 +75,6 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
       else next.add(id);
       return next;
     });
-  };
-
-  const handleDeleteSelected = () => {
-    selected.forEach(id => deleteItem(id));
-    toast.success(`${selected.size} item dihapus`);
-    setSelected(new Set());
-    setSelectMode(false);
-    onUpdate();
   };
 
   const exitSelectMode = () => {
@@ -80,7 +100,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
             <span className="text-xs text-muted-foreground">{selected.size} dipilih</span>
             {selected.size > 0 && (
               <button
-                onClick={handleDeleteSelected}
+                onClick={confirmDeleteMulti}
                 className="text-xs text-destructive hover:underline font-medium"
               >
                 Hapus
@@ -176,7 +196,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
                     </button>
                     <div className="h-px bg-border my-1" />
                     <button
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => confirmDeleteSingle(item.id)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -189,6 +209,37 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
           </div>
         ))}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent className="border-destructive/30 bg-card">
+          <AlertDialogHeader>
+            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-center text-foreground">
+              {deleteConfirm?.type === 'multi'
+                ? `Hapus ${selected.size} item?`
+                : 'Hapus item ini?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {deleteConfirm?.type === 'multi'
+                ? `${selected.size} item yang dipilih akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`
+                : 'Item ini akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
+            <AlertDialogCancel className="flex-1">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeDelete}
+              className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
