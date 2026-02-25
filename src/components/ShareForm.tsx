@@ -12,7 +12,7 @@ const ShareForm = ({ onItemAdded }: ShareFormProps) => {
   const [mode, setMode] = useState<'text' | 'file'>('text');
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
-  const [expiry, setExpiry] = useState(EXPIRY_OPTIONS[2].value);
+  const [expiry, setExpiry] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [lastLink, setLastLink] = useState('');
   const [copied, setCopied] = useState(false);
