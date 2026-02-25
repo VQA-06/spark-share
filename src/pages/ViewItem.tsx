@@ -1,12 +1,30 @@
 import { useParams, Link } from 'react-router-dom';
-import { getItemByCode } from '@/lib/storage';
+import { useState, useEffect } from 'react';
+import { getItemByCode, SharedItem } from '@/lib/storage';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ItemDetail from '@/components/ItemDetail';
 
 const ViewItem = () => {
   const { code } = useParams<{ code: string }>();
-  const item = code ? getItemByCode(code) : undefined;
+  const [item, setItem] = useState<SharedItem | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!code) { setLoading(false); return; }
+    getItemByCode(code).then(data => {
+      setItem(data);
+      setLoading(false);
+    });
+  }, [code]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground text-sm">Memuat...</p>
+      </div>
+    );
+  }
 
   if (!item) {
     return (

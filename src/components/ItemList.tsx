@@ -54,13 +54,15 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
     setDeleteConfirm({ type: 'multi' });
   };
 
-  const executeDelete = () => {
+  const executeDelete = async () => {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'single' && deleteConfirm.id) {
-      deleteItem(deleteConfirm.id);
+      await deleteItem(deleteConfirm.id);
       toast.success('Item dihapus');
     } else if (deleteConfirm.type === 'multi') {
-      selected.forEach(id => deleteItem(id));
+      for (const id of selected) {
+        await deleteItem(id);
+      }
       toast.success(`${selected.size} item dihapus`);
       setSelected(new Set());
       setSelectMode(false);
