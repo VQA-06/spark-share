@@ -341,15 +341,8 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
               </label>
               <div className="relative">
                 <select
-                  value={editExpiry === 0 ? 0 : 'custom'}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val === 0) {
-                      setEditExpiry(0);
-                    } else {
-                      setEditExpiry(Date.now() + val);
-                    }
-                  }}
+                  value={editExpiry}
+                  onChange={(e) => setEditExpiry(Number(e.target.value))}
                   className="w-full appearance-none pl-3 pr-8 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
                 >
                   {EXPIRY_OPTIONS.map((opt) => (
