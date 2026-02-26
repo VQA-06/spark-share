@@ -57,6 +57,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
   const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
   const [editItem, setEditItem] = useState<SharedItem | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editExpiry, setEditExpiry] = useState<number>(0);
@@ -208,11 +209,33 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
         )}
       </div>
 
+      {/* Filter by type */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {['all', 'Teks', 'Gambar', 'PDF', 'Kode', 'Dokumen', 'Web', 'File'].map((type) => {
+          const count = type === 'all' ? items.length : items.filter(i => getFileCategory(i).label === type).length;
+          if (type !== 'all' && count === 0) return null;
+          return (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`text-xs font-medium px-2.5 py-1.5 rounded-md border transition-all ${
+                filterType === type
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {type === 'all' ? 'Semua' : type}
+              <span className="ml-1 opacity-70">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="space-y-2">
         {items
           .filter(item => {
+            if (filterType !== 'all' && getFileCategory(item).label !== filterType) return false;
             if (!search.trim()) return true;
-            // Extract words from search, splitting by spaces, dashes, dots, etc.
             const words = search.toLowerCase().replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g, ' ').split(/\s+/).filter(Boolean);
             const target = item.title.toLowerCase() + ' ' + (item.fileName?.toLowerCase() || '') + ' ' + item.shortCode;
             return words.every(word => target.includes(word));
