@@ -250,8 +250,8 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
 
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-foreground truncate">{item.title}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <code className="text-xs text-primary font-mono">/{item.shortCode}</code>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${getFileCategory(item).color}`}>{getFileCategory(item).label}</span>
                 <span className="text-xs text-muted-foreground">·</span>
                 <span className="text-xs text-muted-foreground">{timeRemaining(item.expiresAt)}</span>
                 {item.fileSize && (
