@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType } from 'lucide-react';
+import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType, Filter } from 'lucide-react';
 import { SharedItem, deleteItem, updateItem, timeRemaining, formatFileSize, EXPIRY_OPTIONS } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
@@ -58,6 +58,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [editItem, setEditItem] = useState<SharedItem | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editExpiry, setEditExpiry] = useState<number>(0);
