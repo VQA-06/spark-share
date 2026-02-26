@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType } from 'lucide-react';
+import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType, Filter } from 'lucide-react';
 import { SharedItem, deleteItem, updateItem, timeRemaining, formatFileSize, EXPIRY_OPTIONS } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
@@ -58,6 +58,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [editItem, setEditItem] = useState<SharedItem | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editExpiry, setEditExpiry] = useState<number>(0);
@@ -160,75 +161,73 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">{items.length} item aktif</h2>
-        {selectMode ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{selected.size} dipilih</span>
-            {selected.size > 0 && (
-              <button
-                onClick={confirmDeleteMulti}
-                className="text-xs text-destructive hover:underline font-medium"
-              >
-                Hapus
-              </button>
-            )}
+        <div className="flex items-center gap-1.5">
+          {/* Filter dropdown */}
+          <div className="relative">
             <button
-              onClick={exitSelectMode}
-              className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setSelectMode(true)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
-          >
-            <CheckSquare className="w-3.5 h-3.5" />
-            Pilih
-          </button>
-        )}
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Cari item..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-9 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* Filter by type */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {['all', 'Teks', 'Gambar', 'PDF', 'Kode', 'Dokumen', 'Web', 'File'].map((type) => {
-          const count = type === 'all' ? items.length : items.filter(i => getFileCategory(i).label === type).length;
-          if (type !== 'all' && count === 0) return null;
-          return (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`text-xs font-medium px-2.5 py-1.5 rounded-md border transition-all ${
-                filterType === type
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+              onClick={() => setFilterOpen(!filterOpen)}
+              className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1.5 rounded-md border transition-all ${
+                filterType !== 'all'
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'text-muted-foreground hover:text-foreground border-border hover:bg-muted'
               }`}
             >
-              {type === 'all' ? 'Semua' : type}
-              <span className="ml-1 opacity-70">{count}</span>
+              <Filter className="w-3.5 h-3.5" />
+              {filterType === 'all' ? 'Filter' : filterType}
             </button>
-          );
-        })}
+            {filterOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 w-36 bg-card border border-border rounded-lg shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {['all', 'Teks', 'Gambar', 'PDF', 'Kode', 'Dokumen', 'Web', 'File'].map((type) => {
+                    const count = type === 'all' ? items.length : items.filter(i => getFileCategory(i).label === type).length;
+                    if (type !== 'all' && count === 0) return null;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => { setFilterType(type); setFilterOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3 py-1.5 text-sm transition-colors ${
+                          filterType === type ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        <span>{type === 'all' ? 'Semua' : type}</span>
+                        <span className="text-xs text-muted-foreground">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {selectMode ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{selected.size} dipilih</span>
+              {selected.size > 0 && (
+                <button
+                  onClick={confirmDeleteMulti}
+                  className="text-xs text-destructive hover:underline font-medium"
+                >
+                  Hapus
+                </button>
+              )}
+              <button
+                onClick={exitSelectMode}
+                className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSelectMode(true)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors px-2 py-1.5 rounded-md border border-border hover:bg-muted"
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              Pilih
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
