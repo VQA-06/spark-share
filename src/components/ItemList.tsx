@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock } from 'lucide-react';
+import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType } from 'lucide-react';
 import { SharedItem, deleteItem, updateItem, timeRemaining, formatFileSize, EXPIRY_OPTIONS } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
@@ -27,6 +27,27 @@ interface ItemListProps {
   items: SharedItem[];
   onUpdate: () => void;
   onItemClick: (item: SharedItem) => void;
+}
+
+const IMAGE_EXT = ['jpg','jpeg','png','gif','webp','bmp','ico','svg'];
+const CODE_EXT = ['js','ts','tsx','jsx','py','java','c','cpp','h','rb','go','rs','php','sh','bash','bat','ps1','lua','kt','swift','r','pl','asm','css','sql'];
+const PDF_EXT = ['pdf'];
+const DOC_EXT = ['doc','docx','odt','rtf'];
+
+function getFileCategory(item: SharedItem): { label: string; icon: React.ReactNode; color: string } {
+  if (item.type === 'text') return { label: 'Teks', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' };
+  const ext = item.fileName?.split('.').pop()?.toLowerCase() || '';
+  if (IMAGE_EXT.includes(ext) || item.fileType?.startsWith('image/'))
+    return { label: 'Gambar', icon: <Image className="w-4 h-4" />, color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' };
+  if (PDF_EXT.includes(ext) || item.fileType === 'application/pdf')
+    return { label: 'PDF', icon: <FileType className="w-4 h-4" />, color: 'bg-red-500/15 text-red-600 dark:text-red-400' };
+  if (CODE_EXT.includes(ext))
+    return { label: 'Kode', icon: <FileCode className="w-4 h-4" />, color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' };
+  if (DOC_EXT.includes(ext))
+    return { label: 'Dokumen', icon: <FileText className="w-4 h-4" />, color: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' };
+  if (['html','htm'].includes(ext))
+    return { label: 'Web', icon: <FileCode className="w-4 h-4" />, color: 'bg-orange-500/15 text-orange-600 dark:text-orange-400' };
+  return { label: 'File', icon: <File className="w-4 h-4" />, color: 'bg-muted text-muted-foreground' };
 }
 
 const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
@@ -217,19 +238,20 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
                 )}
               </div>
             ) : (
-              <div className="p-2 bg-muted rounded-md">
-                {item.type === 'text' ? (
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <File className="w-4 h-4 text-muted-foreground" />
-                )}
-              </div>
+              (() => {
+                const cat = getFileCategory(item);
+                return (
+                  <div className={`p-2 rounded-md ${cat.color}`}>
+                    {cat.icon}
+                  </div>
+                );
+              })()
             )}
 
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-foreground truncate">{item.title}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <code className="text-xs text-primary font-mono">/{item.shortCode}</code>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${getFileCategory(item).color}`}>{getFileCategory(item).label}</span>
                 <span className="text-xs text-muted-foreground">·</span>
                 <span className="text-xs text-muted-foreground">{timeRemaining(item.expiresAt)}</span>
                 {item.fileSize && (
