@@ -1,6 +1,6 @@
-import { Download, Copy, Check, Clock, FileText, Image, Code, Globe } from 'lucide-react';
+import { Download, Copy, Check, Clock, FileText, Image, Code, Globe, Pencil, Save, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { SharedItem, timeRemaining, formatFileSize } from '@/lib/storage';
+import { SharedItem, timeRemaining, formatFileSize, updateItem } from '@/lib/storage';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -67,10 +67,14 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
 
 interface ItemDetailProps {
   item: SharedItem;
+  onItemUpdated?: () => void;
 }
 
-const ItemDetail = ({ item }: ItemDetailProps) => {
+const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
 
@@ -108,10 +112,35 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(item.content);
+    navigator.clipboard.writeText(editing ? editContent : item.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success('Teks disalin!');
+  };
+
+  const handleEdit = () => {
+    setEditContent(item.content);
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditContent('');
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateItem(item.id, { content: editContent });
+      item.content = editContent;
+      setEditing(false);
+      toast.success('Perubahan disimpan!');
+      onItemUpdated?.();
+    } catch {
+      toast.error('Gagal menyimpan perubahan.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const FileHeader = ({ name, size }: { name?: string; size?: number }) => (
@@ -141,16 +170,50 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
       </div>
 
       {item.type === 'text' ? (
-        <div className="relative">
-          <pre className="p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[60vh] overflow-auto">
-            {item.content}
-          </pre>
-          <button
-            onClick={handleCopy}
-            className="absolute top-3 right-3 p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-          </button>
+        <div className="space-y-3">
+          {editing ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Mode Edit</span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={saving}>
+                    <X className="w-3.5 h-3.5 mr-1" />
+                    Batal
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    <Save className="w-3.5 h-3.5 mr-1" />
+                    {saving ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </div>
+              </div>
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full min-h-[40vh] max-h-[60vh] p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground font-mono leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </>
+          ) : (
+            <div className="relative">
+              <pre className="p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[60vh] overflow-auto">
+                {item.content}
+              </pre>
+              <div className="absolute top-3 right-3 flex gap-1">
+                <button
+                  onClick={handleEdit}
+                  className="p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={handleCopy}
+                  className="p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
+                >
+                  {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : isHtml && textPreview ? (
         <div className="space-y-4">

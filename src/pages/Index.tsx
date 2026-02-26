@@ -31,7 +31,7 @@ const Index = () => {
             <ArrowLeft className="w-4 h-4" />
             Kembali
           </button>
-          <ItemDetail item={selectedItem} />
+          <ItemDetail item={selectedItem} onItemUpdated={refresh} />
         </div>
       </div>
     );
