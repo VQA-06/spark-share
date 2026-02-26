@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle, Search } from 'lucide-react';
-import { SharedItem, deleteItem, timeRemaining, formatFileSize } from '@/lib/storage';
+import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock } from 'lucide-react';
+import { SharedItem, deleteItem, updateItem, timeRemaining, formatFileSize, EXPIRY_OPTIONS } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -12,6 +12,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronDown } from 'lucide-react';
 
 interface ItemListProps {
   items: SharedItem[];
@@ -26,6 +36,10 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single' | 'multi'; id?: string } | null>(null);
   const [search, setSearch] = useState('');
+  const [editItem, setEditItem] = useState<SharedItem | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editExpiry, setEditExpiry] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 30000);
@@ -83,6 +97,33 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const exitSelectMode = () => {
     setSelectMode(false);
     setSelected(new Set());
+  };
+
+  const openEdit = (item: SharedItem) => {
+    setOpenMenuId(null);
+    setEditTitle(item.title);
+    // Calculate remaining expiry or 0 for permanent
+    setEditExpiry(item.expiresAt === 0 ? 0 : item.expiresAt);
+    setEditItem(item);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editItem) return;
+    setSaving(true);
+    try {
+      const newExpiresAt = editExpiry === 0 ? 0 : editExpiry;
+      await updateItem(editItem.id, {
+        title: editTitle.trim() || editItem.title,
+        expiresAt: newExpiresAt,
+      });
+      toast.success('Item diperbarui');
+      setEditItem(null);
+      onUpdate();
+    } catch {
+      toast.error('Gagal memperbarui item');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (items.length === 0) {
@@ -225,6 +266,13 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
                       <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                       Salin link
                     </button>
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                      Edit
+                    </button>
                     <div className="h-px bg-border my-1" />
                     <button
                       onClick={() => confirmDeleteSingle(item.id)}
@@ -271,6 +319,61 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Edit Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nama / Judul</label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Masukkan judul"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                Hapus Otomatis
+              </label>
+              <div className="relative">
+                <select
+                  value={editExpiry === 0 ? 0 : 'custom'}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val === 0) {
+                      setEditExpiry(0);
+                    } else {
+                      setEditExpiry(Date.now() + val);
+                    }
+                  }}
+                  className="w-full appearance-none pl-3 pr-8 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                >
+                  {EXPIRY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+              {editItem && editItem.expiresAt > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Saat ini: {timeRemaining(editItem.expiresAt)}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>Batal</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
