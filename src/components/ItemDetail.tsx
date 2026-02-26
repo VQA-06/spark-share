@@ -1,6 +1,6 @@
-import { Download, Copy, Check, Clock, FileText, Image, Code, Globe } from 'lucide-react';
+import { Download, Copy, Check, Clock, FileText, Image, Code, Globe, Pencil, Save, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { SharedItem, timeRemaining, formatFileSize } from '@/lib/storage';
+import { SharedItem, timeRemaining, formatFileSize, updateItem } from '@/lib/storage';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';

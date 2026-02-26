@@ -93,9 +93,10 @@ export async function addItem(item: Omit<SharedItem, 'id' | 'shortCode' | 'creat
   return rowToItem(data as DbRow);
 }
 
-export async function updateItem(id: string, updates: { title?: string; expiresAt?: number }): Promise<void> {
+export async function updateItem(id: string, updates: { title?: string; expiresAt?: number; content?: string }): Promise<void> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.title !== undefined) dbUpdates.title = updates.title;
+  if (updates.content !== undefined) dbUpdates.content = updates.content;
   if (updates.expiresAt !== undefined) {
     dbUpdates.expires_at = updates.expiresAt === 0 ? null : new Date(updates.expiresAt).toISOString();
   }
