@@ -170,16 +170,50 @@ const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
       </div>
 
       {item.type === 'text' ? (
-        <div className="relative">
-          <pre className="p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[60vh] overflow-auto">
-            {item.content}
-          </pre>
-          <button
-            onClick={handleCopy}
-            className="absolute top-3 right-3 p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-          </button>
+        <div className="space-y-3">
+          {editing ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Mode Edit</span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={saving}>
+                    <X className="w-3.5 h-3.5 mr-1" />
+                    Batal
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    <Save className="w-3.5 h-3.5 mr-1" />
+                    {saving ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </div>
+              </div>
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full min-h-[40vh] max-h-[60vh] p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground font-mono leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </>
+          ) : (
+            <div className="relative">
+              <pre className="p-4 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[60vh] overflow-auto">
+                {item.content}
+              </pre>
+              <div className="absolute top-3 right-3 flex gap-1">
+                <button
+                  onClick={handleEdit}
+                  className="p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={handleCopy}
+                  className="p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
+                >
+                  {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : isHtml && textPreview ? (
         <div className="space-y-4">
