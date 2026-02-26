@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, File, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock } from 'lucide-react';
+import { Copy, Trash2, MoreVertical, CheckSquare, X, AlertTriangle, Search, Pencil, Clock, FileText, File, Image, FileCode, FileType } from 'lucide-react';
 import { SharedItem, deleteItem, updateItem, timeRemaining, formatFileSize, EXPIRY_OPTIONS } from '@/lib/storage';
 import { toast } from 'sonner';
 import {
