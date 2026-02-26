@@ -12,6 +12,7 @@ import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
 import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-php';
 import 'prismjs/components/prism-ruby';
 import 'prismjs/components/prism-go';
@@ -32,8 +33,6 @@ import 'prismjs/components/prism-docker';
 import 'prismjs/components/prism-ini';
 import 'prismjs/components/prism-batch';
 import 'prismjs/components/prism-powershell';
-import 'prismjs/components/prism-regex';
-import 'prismjs/components/prism-xml-doc';
 
 const EXT_TO_LANG: Record<string, string> = {
   html: 'markup', htm: 'markup', xml: 'markup', svg: 'markup',
@@ -85,14 +84,14 @@ const CodePreview = ({ code, fileName, className = '' }: CodePreviewProps) => {
   const lang = getLang(fileName);
 
   useEffect(() => {
-    if (codeRef.current) {
+    if (codeRef.current && lang !== 'plain') {
       Prism.highlightElement(codeRef.current);
     }
   }, [code, lang]);
 
   return (
     <pre className={`!bg-[hsl(var(--muted)/0.3)] !m-0 !border !border-border !rounded-b-lg text-sm leading-relaxed max-h-[50vh] overflow-auto ${className}`}>
-      <code ref={codeRef} className={`language-${lang}`}>
+      <code ref={codeRef} className={lang !== 'plain' ? `language-${lang}` : ''}>
         {code}
       </code>
     </pre>
