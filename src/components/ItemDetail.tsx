@@ -1,4 +1,5 @@
-import { Download, Copy, Check, Clock, FileText, Image } from 'lucide-react';
+import { Download, Copy, Check, Clock, FileText, Image, Code, Globe } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SharedItem, timeRemaining, formatFileSize } from '@/lib/storage';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
@@ -34,6 +35,13 @@ function isDocxFile(fileName?: string, fileType?: string): boolean {
   if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return true;
   if (!fileName) return false;
   return fileName.toLowerCase().endsWith('.docx');
+}
+
+function isHtmlFile(fileName?: string, fileType?: string): boolean {
+  if (fileType === 'text/html') return true;
+  if (!fileName) return false;
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  return ['html', 'htm'].includes(ext);
 }
 
 function decodeDataUrl(dataUrl: string): string {
@@ -75,6 +83,7 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
   const isImage = item.type === 'file' && isImageFile(item.fileName, item.fileType);
   const isPdf = item.type === 'file' && isPdfFile(item.fileName, item.fileType);
   const isDocx = item.type === 'file' && isDocxFile(item.fileName, item.fileType);
+  const isHtml = item.type === 'file' && isHtmlFile(item.fileName, item.fileType);
 
   useEffect(() => {
     if (!isDocx) return;
@@ -141,6 +150,50 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
           >
             {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
           </button>
+        </div>
+      ) : isHtml && textPreview ? (
+        <div className="space-y-4">
+          <FileHeader name={item.fileName} size={item.fileSize} />
+          <Tabs defaultValue="web" className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="web" className="flex-1 gap-1.5">
+                <Globe className="w-3.5 h-3.5" />
+                Preview Web
+              </TabsTrigger>
+              <TabsTrigger value="code" className="flex-1 gap-1.5">
+                <Code className="w-3.5 h-3.5" />
+                Preview Teks
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="web">
+              <iframe
+                srcDoc={textPreview}
+                className="w-full h-[60vh] border border-border rounded-lg bg-white"
+                title={item.fileName || 'HTML Preview'}
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </TabsContent>
+            <TabsContent value="code" className="relative">
+              <pre className="p-4 bg-muted/30 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[50vh] overflow-auto">
+                {textPreview}
+              </pre>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(textPreview);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  toast.success('Konten disalin!');
+                }}
+                className="absolute top-3 right-3 p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
+              >
+                {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+              </button>
+            </TabsContent>
+          </Tabs>
+          <Button onClick={handleDownload} variant="outline" className="w-full">
+            <Download className="w-4 h-4 mr-2" />
+            Download {item.fileName}
+          </Button>
         </div>
       ) : textPreview ? (
         <div className="space-y-4">
