@@ -29,6 +29,27 @@ interface ItemListProps {
   onItemClick: (item: SharedItem) => void;
 }
 
+const IMAGE_EXT = ['jpg','jpeg','png','gif','webp','bmp','ico','svg'];
+const CODE_EXT = ['js','ts','tsx','jsx','py','java','c','cpp','h','rb','go','rs','php','sh','bash','bat','ps1','lua','kt','swift','r','pl','asm','css','sql'];
+const PDF_EXT = ['pdf'];
+const DOC_EXT = ['doc','docx','odt','rtf'];
+
+function getFileCategory(item: SharedItem): { label: string; icon: React.ReactNode; color: string } {
+  if (item.type === 'text') return { label: 'Teks', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' };
+  const ext = item.fileName?.split('.').pop()?.toLowerCase() || '';
+  if (IMAGE_EXT.includes(ext) || item.fileType?.startsWith('image/'))
+    return { label: 'Gambar', icon: <Image className="w-4 h-4" />, color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' };
+  if (PDF_EXT.includes(ext) || item.fileType === 'application/pdf')
+    return { label: 'PDF', icon: <FileType className="w-4 h-4" />, color: 'bg-red-500/15 text-red-600 dark:text-red-400' };
+  if (CODE_EXT.includes(ext))
+    return { label: 'Kode', icon: <FileCode className="w-4 h-4" />, color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' };
+  if (DOC_EXT.includes(ext))
+    return { label: 'Dokumen', icon: <FileText className="w-4 h-4" />, color: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' };
+  if (['html','htm'].includes(ext))
+    return { label: 'Web', icon: <FileCode className="w-4 h-4" />, color: 'bg-orange-500/15 text-orange-600 dark:text-orange-400' };
+  return { label: 'File', icon: <File className="w-4 h-4" />, color: 'bg-muted text-muted-foreground' };
+}
+
 const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const [, setTick] = useState(0);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
