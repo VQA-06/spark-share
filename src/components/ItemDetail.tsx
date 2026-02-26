@@ -112,10 +112,35 @@ const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(item.content);
+    navigator.clipboard.writeText(editing ? editContent : item.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success('Teks disalin!');
+  };
+
+  const handleEdit = () => {
+    setEditContent(item.content);
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditContent('');
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateItem(item.id, { content: editContent });
+      item.content = editContent;
+      setEditing(false);
+      toast.success('Perubahan disimpan!');
+      onItemUpdated?.();
+    } catch {
+      toast.error('Gagal menyimpan perubahan.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const FileHeader = ({ name, size }: { name?: string; size?: number }) => (
