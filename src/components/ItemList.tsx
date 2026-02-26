@@ -102,8 +102,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
   const openEdit = (item: SharedItem) => {
     setOpenMenuId(null);
     setEditTitle(item.title);
-    // Calculate remaining expiry or 0 for permanent
-    setEditExpiry(item.expiresAt === 0 ? 0 : item.expiresAt);
+    setEditExpiry(0); // default select value, will recalculate on save
     setEditItem(item);
   };
 
@@ -111,7 +110,7 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
     if (!editItem) return;
     setSaving(true);
     try {
-      const newExpiresAt = editExpiry === 0 ? 0 : editExpiry;
+      const newExpiresAt = editExpiry === 0 ? 0 : Date.now() + editExpiry;
       await updateItem(editItem.id, {
         title: editTitle.trim() || editItem.title,
         expiresAt: newExpiresAt,
@@ -342,15 +341,8 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
               </label>
               <div className="relative">
                 <select
-                  value={editExpiry === 0 ? 0 : 'custom'}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val === 0) {
-                      setEditExpiry(0);
-                    } else {
-                      setEditExpiry(Date.now() + val);
-                    }
-                  }}
+                  value={editExpiry}
+                  onChange={(e) => setEditExpiry(Number(e.target.value))}
                   className="w-full appearance-none pl-3 pr-8 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
                 >
                   {EXPIRY_OPTIONS.map((opt) => (
