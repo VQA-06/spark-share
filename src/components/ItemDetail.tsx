@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import mammoth from 'mammoth';
+import CodePreview from '@/components/CodePreview';
 
 const TEXT_EXTENSIONS = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'css', 'js', 'ts', 'tsx', 'jsx', 'py', 'java', 'c', 'cpp', 'h', 'rb', 'go', 'rs', 'php', 'sh', 'bash', 'bat', 'cmd', 'ps1', 'yml', 'yaml', 'toml', 'ini', 'cfg', 'conf', 'log', 'sql', 'env', 'gitignore', 'dockerfile', 'makefile', 'readme', 'license', 'svg', 'htaccess', 'properties', 'gradle', 'kt', 'swift', 'r', 'lua', 'pl', 'pm', 'tcl', 'asm', 'vbs', 'reg'];
 
@@ -174,9 +175,7 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
               />
             </TabsContent>
             <TabsContent value="code" className="relative">
-              <pre className="p-4 bg-muted/30 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[50vh] overflow-auto">
-                {textPreview}
-              </pre>
+              <CodePreview code={textPreview} fileName={item.fileName} className="!rounded-lg" />
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(textPreview);
@@ -199,9 +198,7 @@ const ItemDetail = ({ item }: ItemDetailProps) => {
         <div className="space-y-4">
           <div className="relative">
             <FileHeader name={item.fileName} size={item.fileSize} />
-            <pre className="p-4 bg-muted/30 border border-border rounded-b-lg text-sm text-foreground whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[50vh] overflow-auto">
-              {textPreview}
-            </pre>
+            <CodePreview code={textPreview} fileName={item.fileName} />
             <button
               onClick={() => {
                 navigator.clipboard.writeText(textPreview);
