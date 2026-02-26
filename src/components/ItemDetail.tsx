@@ -67,10 +67,14 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
 
 interface ItemDetailProps {
   item: SharedItem;
+  onItemUpdated?: () => void;
 }
 
-const ItemDetail = ({ item }: ItemDetailProps) => {
+const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
 
