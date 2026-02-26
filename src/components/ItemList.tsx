@@ -238,13 +238,14 @@ const ItemList = ({ items, onUpdate, onItemClick }: ItemListProps) => {
                 )}
               </div>
             ) : (
-              <div className="p-2 bg-muted rounded-md">
-                {item.type === 'text' ? (
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <File className="w-4 h-4 text-muted-foreground" />
-                )}
-              </div>
+              (() => {
+                const cat = getFileCategory(item);
+                return (
+                  <div className={`p-2 rounded-md ${cat.color}`}>
+                    {cat.icon}
+                  </div>
+                );
+              })()
             )}
 
             <div className="flex-1 min-w-0">
