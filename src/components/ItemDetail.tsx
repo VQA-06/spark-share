@@ -123,8 +123,13 @@ const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
     toast.success('Teks disalin!');
   };
 
-  const handleEdit = () => {
+  const handleEditText = () => {
     setEditContent(item.content);
+    setEditing(true);
+  };
+
+  const handleEditFile = () => {
+    setEditContent(textPreview);
     setEditing(true);
   };
 
@@ -136,8 +141,13 @@ const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateItem(item.id, { content: editContent });
-      item.content = editContent;
+      let newContent = editContent;
+      if (item.type === 'file') {
+        const mimeType = item.fileType || 'text/plain';
+        newContent = encodeTextToDataUrl(editContent, mimeType);
+      }
+      await updateItem(item.id, { content: newContent });
+      item.content = newContent;
       setEditing(false);
       toast.success('Perubahan disimpan!');
       onItemUpdated?.();
