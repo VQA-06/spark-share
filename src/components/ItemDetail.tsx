@@ -65,6 +65,11 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+function encodeTextToDataUrl(text: string, mimeType: string = 'text/plain'): string {
+  const encoded = btoa(unescape(encodeURIComponent(text)));
+  return `data:${mimeType};base64,${encoded}`;
+}
+
 interface ItemDetailProps {
   item: SharedItem;
   onItemUpdated?: () => void;
