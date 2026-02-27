@@ -214,7 +214,7 @@ const ItemDetail = ({ item, onItemUpdated }: ItemDetailProps) => {
               </pre>
               <div className="absolute top-3 right-3 flex gap-1">
                 <button
-                  onClick={handleEdit}
+                  onClick={handleEditText}
                   className="p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors"
                   title="Edit"
                 >
